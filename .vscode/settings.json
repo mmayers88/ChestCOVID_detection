@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/Users/ghoci/miniforge3/envs/tf/bin/python",
+    "terminal.integrated.shellArgs.windows": "conda activate tf"
+}

@@ -1,4 +1,6 @@
 import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 import numpy as np
 import os
 from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, Dense
@@ -6,8 +8,6 @@ from tensorflow.keras.layers import AvgPool2D, GlobalAveragePooling2D, MaxPool2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import ReLU, concatenate
 import tensorflow.keras.backend as K
-import tensorflow_datasets as tfds
-
 
 #https://towardsdatascience.com/creating-densenet-121-with-tensorflow-edbc08a956d8
 
@@ -28,34 +28,17 @@ EPOCHS = 50
 
 num_filters = 16
 
-'''train_ds, val_ds = tfds.load("imagenette/full-size-v2",
-                             split=['train', 'validation'],
-                             with_info=True,
-                             as_supervised=True)
-                             '''
-
 train_images = np.load('train_images.npy')
 train_labels = np.load('train_labels.npy')
 test_images = np.load('test_images.npy')
 test_labels = np.load('test_labels.npy')
 
 
+print(train_images.shape,test_images.shape)
 
-datagen = tf.keras.preprocessing.ImageDataGenerator(featurewise_center=True,
-                                                    featurewise_std_normalization= True,
-                                                    rotation_range=20,
-                                                    width_shift_range=0.2,
-                                                    height_shift_range=0.2,
-                                                    horizontal_flip=True)
+train_dataset = tf.data.Dataset.from_tensor_slices((train_images, train_labels)).batch(batch_size=batch_size)
+test_dataset = tf.data.Dataset.from_tensor_slices((test_images, test_labels)).batch(batch_size=batch_size)
 
-train_ds = datagen.flow( train_images, 
-                        train_labels, 
-                        batch_size=batch_size,
-                        shuffle=True)
-test_ds = datagen.flow( test_images, 
-                        test_labels, 
-                        batch_size=batch_size,
-                        shuffle=True)
 
 
 # Creating Densenet121
