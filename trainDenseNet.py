@@ -1,12 +1,15 @@
 import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 import numpy as np
 import os
-from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, Dense
+from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, Dense, Dropout
 from tensorflow.keras.layers import AvgPool2D, GlobalAveragePooling2D, MaxPool2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import ReLU, concatenate
 import tensorflow.keras.backend as K
 import tensorflow_datasets as tfds
+import pickle
 
 
 #https://towardsdatascience.com/creating-densenet-121-with-tensorflow-edbc08a956d8
@@ -41,18 +44,18 @@ test_labels = np.load('test_labels.npy')
 
 
 
-datagen = tf.keras.preprocessing.ImageDataGenerator(featurewise_center=True,
+datagen = tf.keras.preprocessing.image.ImageDataGenerator(featurewise_center=True,
                                                     featurewise_std_normalization= True,
                                                     rotation_range=20,
                                                     width_shift_range=0.2,
                                                     height_shift_range=0.2,
                                                     horizontal_flip=True)
 
-train_ds = datagen.flow( train_images, 
+train_dataset = datagen.flow( train_images,
                         train_labels, 
                         batch_size=batch_size,
                         shuffle=True)
-test_ds = datagen.flow( test_images, 
+test_dataset = datagen.flow( test_images,
                         test_labels, 
                         batch_size=batch_size,
                         shuffle=True)
@@ -65,6 +68,7 @@ def densenet(input_shape, n_classes, filters=32):
 
         x = BatchNormalization()(x)
         x = ReLU()(x)
+        x = Dropout(0.2)(x) #adding dropout!
         x = Conv2D(filters, kernel, strides=strides, padding='same')(x)
         return x
 
@@ -138,11 +142,15 @@ else:
     print("Now Training")
 
 
-model.fit(train_dataset,
-          epochs=EPOCHS,
-          batch_size=batch_size,
-          callbacks=[cp_callback],
-          validation_data=test_dataset,
-          validation_freq = 10, 
-          verbose=1)
+history = model.fit(train_dataset,
+                    epochs=EPOCHS,
+                    batch_size=batch_size,
+                    callbacks=[cp_callback],
+                    validation_data=test_dataset,
+                    validation_freq = 10, 
+                    verbose=1)
 
+with open('/trainHistoryDict', 'wb') as file_pi:
+    pickle.dump(history.history, file_pi)
+
+#history = pickle.load(open('/trainHistoryDict'), "rb")
